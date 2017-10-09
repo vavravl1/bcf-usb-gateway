@@ -69,4 +69,9 @@ bool usb_talk_payload_get_compound_buffer(usb_talk_payload_t *payload, uint8_t *
 bool usb_talk_is_string_token_equal(const char *buffer, jsmntok_t *token, const char *string);
 uint8_t usb_talk_hex_to_u8(const char *hex);
 
+
+void usb_talk_publish_watering_humidity(uint64_t *device_address, uint8_t humidity);
+void usb_talk_publish_watering_pump(uint64_t *device_address, uint8_t watering_pump);
+void usb_talk_publish_watering_water_level(uint64_t *device_address, uint8_t watering_water_level);
+
 #endif /* _USB_TALK_H */

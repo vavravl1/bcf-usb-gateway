@@ -912,3 +912,29 @@ static bool _usb_talk_token_get_string(const char *buffer, jsmntok_t *token, cha
     return true;
 }
 
+
+void usb_talk_publish_watering_humidity(uint64_t *device_address, uint8_t humidity) {
+    snprintf(_usb_talk.tx_buffer, sizeof(_usb_talk.tx_buffer),
+            "[\"%012llx/watering/-/humidity\", %d]\n",
+            *device_address, humidity);
+
+    usb_talk_send_string((const char *) _usb_talk.tx_buffer);
+}
+
+void usb_talk_publish_watering_pump(uint64_t *device_address, uint8_t watering_pump) {
+    snprintf(_usb_talk.tx_buffer, sizeof(_usb_talk.tx_buffer),
+            "[\"%012llx/watering/-/pump\", %s]\n",
+            *device_address, watering_pump?"true":"false");
+
+    usb_talk_send_string((const char *) _usb_talk.tx_buffer);    
+}
+
+void usb_talk_publish_watering_water_level(uint64_t *device_address, uint8_t watering_water_level) {
+    snprintf(_usb_talk.tx_buffer, sizeof(_usb_talk.tx_buffer),
+            "[\"%012llx/watering/-/water-level\", %s]\n",
+            *device_address, watering_water_level?"true":"false");
+
+    usb_talk_send_string((const char *) _usb_talk.tx_buffer);
+}
+
+

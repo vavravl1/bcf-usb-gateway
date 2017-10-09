@@ -4,6 +4,8 @@
 #include <radio.h>
 #include <sensors.h>
 
+#include "watering.h"
+
 #define UPDATE_INTERVAL 5000
 #define APPLICATION_TASK_ID 0
 
@@ -368,6 +370,24 @@ void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *
                 usb_talk_publish_relay(peer_device_address, &state);
                 break;
             }
+            case RADIO_HUMIDITY:
+            {
+                uint8_t watering_humidity = buffer[1];
+	        usb_talk_publish_watering_humidity(peer_device_address, watering_humidity);
+                break;
+            }
+            case RADIO_PUMP:
+            {
+                uint8_t watering_pump = buffer[1];
+	        usb_talk_publish_watering_pump(peer_device_address, watering_pump);
+                break;
+            }	    
+            case RADIO_WATER_LEVEL:
+            {
+                uint8_t watering_water_level = buffer[1];
+	        usb_talk_publish_watering_water_level(peer_device_address, watering_water_level);
+                break;
+            }	
             default:
             {
                 break;
