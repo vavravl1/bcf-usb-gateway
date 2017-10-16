@@ -5,6 +5,7 @@
 #include <sensors.h>
 
 #include "watering.h"
+#include "vv_display.h"
 
 #define UPDATE_INTERVAL 5000
 #define APPLICATION_TASK_ID 0
@@ -56,7 +57,7 @@ static void enrollment_start(uint64_t *device_address, usb_talk_payload_t *paylo
 static void enrollment_stop(uint64_t *device_address, usb_talk_payload_t *payload, void *param);
 static void automatic_pairing_start(uint64_t *device_address, usb_talk_payload_t *payload, void *param);
 static void automatic_pairing_stop(uint64_t *device_address, usb_talk_payload_t *payload, void *param);
-static void update_power_display(uint64_t *device_address, usb_talk_payload_t *payload, void *param);
+static void update_vv_display(uint64_t *device_address, usb_talk_payload_t *payload, void *param);
 
 static void _radio_pub_state_set(uint8_t type, uint64_t *device_address, bool state);
 static void _radio_pub_state_get(uint8_t type, uint64_t *device_address);
@@ -98,10 +99,10 @@ const usb_talk_subscribe_t subscribes[] = {
     {"/enrollment/stop", enrollment_stop, NULL},
     {"/automatic-pairing/start", automatic_pairing_start, NULL},
     {"/automatic-pairing/stop", automatic_pairing_stop, NULL},
-    {"vv-display/-/power/set", update_power_display, &vv_display_power},
-    {"vv-display/-/living-room/set", update_power_display, &vv_display_living_room},
-    {"vv-display/-/terrace/set", update_power_display, &vv_display_terrace},
-    {"vv-display/-/co2/set", update_power_display, &vv_display_co2}
+    {"vv-display/-/power/set", update_vv_display, &vv_display_power},
+    {"vv-display/-/living-room/set", update_vv_display, &vv_display_living_room},
+    {"vv-display/-/terrace/set", update_vv_display, &vv_display_terrace},
+    {"vv-display/-/co2/set", update_vv_display, &vv_display_co2}
 };
 
 void application_init(void)
@@ -1092,7 +1093,7 @@ static void automatic_pairing_stop(uint64_t *device_address, usb_talk_payload_t 
     bc_radio_automatic_pairing_stop();
 }
 
-static void update_power_display(uint64_t *device_address, usb_talk_payload_t *payload, void *param)
+static void update_vv_display(uint64_t *device_address, usb_talk_payload_t *payload, void *param)
 {
     (void) device_address;
     (void) payload;
@@ -1104,16 +1105,10 @@ static void update_power_display(uint64_t *device_address, usb_talk_payload_t *p
         return;
     }
 
-    uint8_t buffer[1 + sizeof(uint64_t) + 1 + sizeof(float) ];    
-    buffer[0] = 0xf0;
-    memcpy(buffer + 1, device_address, sizeof(uint64_t));    
-    buffer[1 + sizeof(uint64_t)] = data_type_index;
-    memcpy(buffer + 1 + sizeof(uint64_t) + 1, &new_val, sizeof(new_val));    
+    vv_display_send_update(device_address, data_type_index, &new_val);
 
-    bc_radio_pub_buffer(buffer, sizeof(buffer));
-
-    bc_led_set_mode(&led, BC_LED_MODE_OFF);
-    bc_led_pulse(&led, 100);
+    //bc_led_set_mode(&led, BC_LED_MODE_OFF);
+    //bc_led_pulse(&led, 100);
 }
 
 static void _radio_pub_state_set(uint8_t type, uint64_t *device_address, bool state)
