@@ -6,6 +6,7 @@
 
 #include "watering.h"
 #include "vv_display.h"
+#include "vv_radio.h"
 
 #define UPDATE_INTERVAL 5000
 #define APPLICATION_TASK_ID 0
@@ -65,10 +66,11 @@ static void _radio_pub_state_get(uint8_t type, uint64_t *device_address);
 static uint8_t relay_0_number = 0;
 static uint8_t relay_1_number = 1;
 
-static uint8_t vv_display_power = 0;
-static uint8_t vv_display_living_room = 1;
-static uint8_t vv_display_terrace = 2;
-static uint8_t vv_display_co2 = 3;
+static uint8_t vv_display_power = VV_RADIO_DATA_TYPE_L1_POWER;
+static uint8_t vv_display_living_room = VV_RADIO_DATA_TYPE_TEMPERATURE_LIVING_ROOM;
+static uint8_t vv_display_terrace = VV_RADIO_DATA_TYPE_TEMPERATURE_TERRACE;
+static uint8_t vv_display_co2 = VV_RADIO_DATA_TYPE_CO2;
+static uint8_t vv_display_thermostat = VV_RADIO_DATA_TYPE_THERMOSTAT_REFERENCE_VALUE;
 
 const usb_talk_subscribe_t subscribes[] = {
     {"led/-/state/set", led_state_set, NULL},
@@ -102,7 +104,8 @@ const usb_talk_subscribe_t subscribes[] = {
     {"vv-display/-/power/set", update_vv_display, &vv_display_power},
     {"vv-display/-/living-room/set", update_vv_display, &vv_display_living_room},
     {"vv-display/-/terrace/set", update_vv_display, &vv_display_terrace},
-    {"vv-display/-/co2/set", update_vv_display, &vv_display_co2}
+    {"vv-display/-/co2/set", update_vv_display, &vv_display_co2},
+    {"vv-display/-/thermostat/set", update_vv_display, &vv_display_thermostat}
 };
 
 void application_init(void)
@@ -1105,7 +1108,7 @@ static void update_vv_display(uint64_t *device_address, usb_talk_payload_t *payl
         return;
     }
 
-    vv_display_send_update(device_address, data_type_index, &new_val);
+    vv_radio_send_update(device_address, data_type_index, &new_val);
 
     //bc_led_set_mode(&led, BC_LED_MODE_OFF);
     //bc_led_pulse(&led, 100);
