@@ -937,4 +937,20 @@ void usb_talk_publish_watering_water_level(uint64_t *device_address, uint8_t wat
     usb_talk_send_string((const char *) _usb_talk.tx_buffer);
 }
 
+bool usb_talk_payload_get_json(usb_talk_payload_t *payload, char *buffer, size_t *length)
+{
+    if (payload->tokens[0].type != JSMN_OBJECT)
+    {
+        return false;
+    }
+    uint32_t token_length = payload->tokens[0].end - payload->tokens[0].start;
+    if (token_length > *length)
+    {
+        return false;
+    }
+    strncpy(buffer, &payload->buffer[payload->tokens[0].start], token_length);
+    *length = token_length;
+    return true;
+}
+
 

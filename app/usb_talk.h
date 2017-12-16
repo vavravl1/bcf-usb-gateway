@@ -74,4 +74,7 @@ void usb_talk_publish_watering_humidity(uint64_t *device_address, uint8_t humidi
 void usb_talk_publish_watering_pump(uint64_t *device_address, uint8_t watering_pump);
 void usb_talk_publish_watering_water_level(uint64_t *device_address, uint8_t watering_water_level);
 
+
+bool usb_talk_payload_get_json(usb_talk_payload_t *payload, char *buffer, size_t *length);
+
 #endif /* _USB_TALK_H */

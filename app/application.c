@@ -38,6 +38,7 @@ static void enrollment_stop(uint64_t *device_address, usb_talk_payload_t *payloa
 static void automatic_pairing_start(uint64_t *device_address, usb_talk_payload_t *payload, void *param);
 static void automatic_pairing_stop(uint64_t *device_address, usb_talk_payload_t *payload, void *param);
 static void update_vv_display(uint64_t *device_address, usb_talk_payload_t *payload, void *param);
+static void update_vv_display_json(uint64_t *device_address, usb_talk_payload_t *payload, void *param);
 
 static void _radio_pub_state_set(uint8_t type, uint64_t *device_address, bool state);
 static void _radio_pub_state_get(uint8_t type, uint64_t *device_address);
@@ -78,7 +79,8 @@ const usb_talk_subscribe_t subscribes[] = {
     {"vv-display/-/terrace/set", update_vv_display, &vv_display_terrace},
     {"vv-display/-/bedroom/set", update_vv_display, &vv_display_bedroom},
     {"vv-display/-/co2/set", update_vv_display, &vv_display_co2},
-    {"vv-display/-/thermostat/set", update_vv_display, &vv_display_thermostat}
+    {"vv-display/-/thermostat/set", update_vv_display, &vv_display_thermostat},
+    {"vv-display/-/json/set", update_vv_display_json, NULL}
 };
 
 void application_init(void)
@@ -646,7 +648,6 @@ static void automatic_pairing_stop(uint64_t *device_address, usb_talk_payload_t 
 
 static void update_vv_display(uint64_t *device_address, usb_talk_payload_t *payload, void *param)
 {
-    (void) device_address;
     (void) payload;
     uint8_t data_type_index = *((uint8_t*)param);
 
@@ -660,6 +661,22 @@ static void update_vv_display(uint64_t *device_address, usb_talk_payload_t *payl
 
     //bc_led_set_mode(&led, BC_LED_MODE_OFF);
     //bc_led_pulse(&led, 100);
+}
+
+static void update_vv_display_json(uint64_t *device_address, usb_talk_payload_t *payload, void *param) {
+    (void) param;
+
+    char buffer[MAX_JSON_SIZE];
+    memset(buffer, 0, MAX_JSON_SIZE);
+    
+    size_t max_size = MAX_JSON_SIZE;
+    if (!usb_talk_payload_get_json(payload, buffer, &max_size))
+    {
+        return;
+    }
+
+    json_radio_send(device_address, buffer);
+    bc_led_pulse(&led, 100);
 }
 
 static void _radio_pub_state_set(uint8_t type, uint64_t *device_address, bool state)
