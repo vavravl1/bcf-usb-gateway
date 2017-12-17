@@ -4,26 +4,23 @@
 #include <bc_common.h>
 #include <bcl.h>
 
-void vv_radio_send_update(uint64_t *device_address, uint8_t data_type_index, float *new_val) {
+void vv_radio_send_update(struct vv_radio_single_float_packet *source) {
     static uint8_t buffer[VV_RADIO_MESSAGE_SIZE];    
-    buffer[VV_RADIO_TYPE] = VV_RADIO_THERMOSTAT;
-    memcpy(buffer + VV_RADIO_ADDRESS, device_address, sizeof(uint64_t));    
-    buffer[VV_RADIO_DATA_TYPE_INDEX] = data_type_index;
-    memcpy(buffer + VV_RADIO_NEW_VAL, new_val, sizeof(*new_val));    
+    buffer[VV_RADIO_TYPE] = VV_RADIO_SINGLE_FLOAT;
+    memcpy(buffer + VV_RADIO_ADDRESS, &source -> device_address, sizeof(uint64_t));    
+    buffer[VV_RADIO_DATA_TYPE] = source -> type;
+    memcpy(buffer + VV_RADIO_VALUE, &source -> value, sizeof(float));    
 
     bc_radio_pub_buffer(buffer, sizeof(buffer));
 }
 
-void json_radio_send(uint64_t *device_address, const char *json) {
-    static uint8_t buffer[MAX_JSON_SIZE];
-    memset(buffer, 0, MAX_JSON_SIZE);
+void vv_radio_parse_incoming_buffer(size_t *length, uint8_t *buffer, struct vv_radio_single_float_packet *target) {
+    if (*length != VV_RADIO_MESSAGE_SIZE) { 
+	return;
+    }
 
-    size_t json_length = strlen(json);
-
-    buffer[JSON_RADIO_TYPE_POS] = JSON_RADIO_TYPE;
-    memcpy(buffer + JSON_RADIO_ADDRESS_POS, device_address, sizeof(uint64_t));    
-    memcpy(buffer + JSON_RADIO_SIZE_POS, &json_length, sizeof(size_t));        
-    memcpy(buffer + JSON_RADIO_VALUE_POS, json, strlen(json) * sizeof(char));        
-
-    bc_radio_pub_buffer(buffer, sizeof(buffer));
+    target -> type = buffer[VV_RADIO_DATA_TYPE];
+    memcpy(& target -> device_address, buffer + VV_RADIO_ADDRESS, sizeof(uint64_t));
+    memcpy(& target -> value, buffer + VV_RADIO_VALUE, sizeof(float));
 }
+

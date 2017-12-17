@@ -6,6 +6,7 @@
 
 #include "watering.h"
 #include "vv_radio.h"
+#include "vv_radio_watering.h"
 
 #define UPDATE_INTERVAL 5000
 #define APPLICATION_TASK_ID 0
@@ -38,7 +39,6 @@ static void enrollment_stop(uint64_t *device_address, usb_talk_payload_t *payloa
 static void automatic_pairing_start(uint64_t *device_address, usb_talk_payload_t *payload, void *param);
 static void automatic_pairing_stop(uint64_t *device_address, usb_talk_payload_t *payload, void *param);
 static void update_vv_display(uint64_t *device_address, usb_talk_payload_t *payload, void *param);
-static void update_vv_display_json(uint64_t *device_address, usb_talk_payload_t *payload, void *param);
 
 static void _radio_pub_state_set(uint8_t type, uint64_t *device_address, bool state);
 static void _radio_pub_state_get(uint8_t type, uint64_t *device_address);
@@ -79,8 +79,7 @@ const usb_talk_subscribe_t subscribes[] = {
     {"vv-display/-/terrace/set", update_vv_display, &vv_display_terrace},
     {"vv-display/-/bedroom/set", update_vv_display, &vv_display_bedroom},
     {"vv-display/-/co2/set", update_vv_display, &vv_display_co2},
-    {"vv-display/-/thermostat/set", update_vv_display, &vv_display_thermostat},
-    {"vv-display/-/json/set", update_vv_display_json, NULL}
+    {"vv-display/-/thermostat/set", update_vv_display, &vv_display_thermostat}
 };
 
 void application_init(void)
@@ -269,6 +268,13 @@ void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *
             memcpy(&value, buffer + 1, sizeof(value));
             usb_talk_publish_float(peer_device_address, (char *)buffer + 5, &value);
             break;
+        }
+	case VV_RADIO_SINGLE_FLOAT: 
+	{
+	    struct vv_radio_single_float_packet packet;
+	    vv_radio_parse_incoming_buffer(length, buffer, &packet);
+	    process_incoming_packet(&packet);
+	    break;
         }
         default:
         {
@@ -648,35 +654,14 @@ static void automatic_pairing_stop(uint64_t *device_address, usb_talk_payload_t 
 
 static void update_vv_display(uint64_t *device_address, usb_talk_payload_t *payload, void *param)
 {
-    (void) payload;
-    uint8_t data_type_index = *((uint8_t*)param);
-
-    float new_val;
-    if (!usb_talk_payload_get_float(payload, &new_val))
-    {
+    struct vv_radio_single_float_packet packet;
+    packet.device_address = *device_address;
+    if (!usb_talk_payload_get_float(payload, &packet.value)) {
         return;
     }
+    packet.type = *((uint8_t*)param);
 
-    vv_radio_send_update(device_address, data_type_index, &new_val);
-
-    //bc_led_set_mode(&led, BC_LED_MODE_OFF);
-    //bc_led_pulse(&led, 100);
-}
-
-static void update_vv_display_json(uint64_t *device_address, usb_talk_payload_t *payload, void *param) {
-    (void) param;
-
-    char buffer[MAX_JSON_SIZE];
-    memset(buffer, 0, MAX_JSON_SIZE);
-    
-    size_t max_size = MAX_JSON_SIZE;
-    if (!usb_talk_payload_get_json(payload, buffer, &max_size))
-    {
-        return;
-    }
-
-    json_radio_send(device_address, buffer);
-    bc_led_pulse(&led, 100);
+    vv_radio_send_update(&packet);
 }
 
 static void _radio_pub_state_set(uint8_t type, uint64_t *device_address, bool state)
