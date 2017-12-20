@@ -28,13 +28,13 @@
 #define VV_RADIO_MESSAGE_SIZE     (VV_RADIO_VALUE + sizeof(float))
 
 struct vv_radio_single_float_packet {
-    uint64_t device_address;
+    uint64_t device_address; // When is Gateway->Node then this is addressee's address. When from Node->Gateway then is it source address
     uint8_t type;
     float value;
 };
 
 void vv_radio_listening_init();
-void vv_radio_parse_incoming_buffer(size_t *length, uint8_t *buffer, struct vv_radio_single_float_packet *target);
+void vv_radio_parse_incoming_buffer(size_t length, uint8_t *buffer, struct vv_radio_single_float_packet *target);
 void vv_radio_send_update(struct vv_radio_single_float_packet *source);
 
 #endif

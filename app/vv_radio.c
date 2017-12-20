@@ -14,8 +14,8 @@ void vv_radio_send_update(struct vv_radio_single_float_packet *source) {
     bc_radio_pub_buffer(buffer, sizeof(buffer));
 }
 
-void vv_radio_parse_incoming_buffer(size_t *length, uint8_t *buffer, struct vv_radio_single_float_packet *target) {
-    if (*length != VV_RADIO_MESSAGE_SIZE) { 
+void vv_radio_parse_incoming_buffer(size_t length, uint8_t *buffer, struct vv_radio_single_float_packet *target) {
+    if (length != VV_RADIO_MESSAGE_SIZE) { 
 	return;
     }
 
